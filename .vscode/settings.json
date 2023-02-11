@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "time.h": "c",
+        "stdlib.h": "c",
+        "defs.h": "c",
+        "limits": "c",
+        "windows.h": "c",
+        "unistd.h": "c",
+        "defs2.h": "c",
+        "pesto.h": "c"
+    }
+}
