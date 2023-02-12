@@ -13,7 +13,7 @@
     # include <sys/time.h>
 #endif
 
-#define _ENGINE_NAME "HHR+Qsearch"
+#define _ENGINE_NAME "HHR+Qs"
 #define _ENGINE_VERSION "1.0.0"
 #define _ENGINE_AUTHOR "Slender"
 
@@ -31,8 +31,8 @@
 #define INFINITE 50000
 #define MAX_PLY 64
 #define MAX_DEPTH 64
-#define MATE_VALUE 490000
-#define MATE_SCORE 480000
+#define MATE_VALUE 49000
+#define MATE_SCORE 48000
 
 #define MAX(a,b) ((a > b) ? a : b)
 #define MIN(a,b) ((a > b) ? b : a)
