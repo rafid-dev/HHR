@@ -2498,6 +2498,8 @@ static inline int evaluate()
     
     // penalties
     int double_pawns = 0;
+
+    int material;
     
     // loop over piece bitboards
     for (int bb_piece = P; bb_piece <= k; bb_piece++)
@@ -2515,7 +2517,7 @@ static inline int evaluate()
             square = get_ls1b_index(bitboard);
             
             // score material weights
-            score += material_score[piece];
+            
             
             // score positional piece scores
             switch (piece)
@@ -2524,7 +2526,7 @@ static inline int evaluate()
                 case P:
                     // positional score
                     score += pawn_score[square];
-                    
+                    material += material_score[PAWN];
                     // double pawn penalty
                     //double_pawns = count_bits(bitboards[P] & file_masks[square]);
                     
@@ -2548,13 +2550,14 @@ static inline int evaluate()
                 case N:
                     // positional score
                     score += knight_score[square];
+                    material += material_score[KNIGHT];
                     break;
                 
                 // evaluate white bishops
                 case B:
                     // positional scores
                     score += bishop_score[square];
-                    
+                    material += material_score[BISHOP];
                     // mobility
                     //score += count_bits(get_bishop_attacks(square, occupancies[both]));
                     
@@ -2564,7 +2567,7 @@ static inline int evaluate()
                 case R:
                     // positional score
                     score += rook_score[square];
-                    
+                    material += material_score[ROOK];
                     // semi open file
                     /*if ((bitboards[P] & file_masks[square]) == 0)
                         // add semi open file bonus
@@ -2579,8 +2582,10 @@ static inline int evaluate()
                 
                 // evaluate white queens
                 case Q:
+                    score += queen_score[square];
+                    material += material_score[QUEEN];
+
                     // mobility
-                    score += queen_score[mirror_score[square]];
                     //score += count_bits(get_queen_attacks(square, occupancies[both]));
                     break;
                 
@@ -2607,6 +2612,7 @@ static inline int evaluate()
                 case p:
                     // positional score
                     score -= pawn_score[mirror_score[square]];
+                    material -= material_score[PAWN];
 
                     // double pawn penalty
                     /*double_pawns = count_bits(bitboards[p] & file_masks[square]);
@@ -2631,12 +2637,16 @@ static inline int evaluate()
                 case n:
                     // positional score
                     score -= knight_score[mirror_score[square]];
+                    material -= material_score[KNIGHT];
+
                     break;
                 
                 // evaluate black bishops
                 case b:
                     // positional score
                     score -= bishop_score[mirror_score[square]];
+                    material -= material_score[BISHOP];
+
                     
                     // mobility
                     //score -= count_bits(get_bishop_attacks(square, occupancies[both]));
@@ -2646,6 +2656,7 @@ static inline int evaluate()
                 case r:
                     // positional score
                     score -= rook_score[mirror_score[square]];
+                    material -= material_score[ROOK];
                     
                     // semi open file
                     /*if ((bitboards[p] & file_masks[square]) == 0)
@@ -2661,8 +2672,11 @@ static inline int evaluate()
                 
                 // evaluate black queens
                 case q:
-                    // mobility
                     score -= queen_score[mirror_score[square]];
+                    material -= material_score[QUEEN];
+
+                    // mobility
+
                     //score -= count_bits(get_queen_attacks(square, occupancies[both]));
                     break;
                 
@@ -2692,7 +2706,7 @@ static inline int evaluate()
     }
     
     // return final evaluation based on side
-    return (side == white) ? score : -score;
+    return (side == white) ? material : -material;
 }
 
 
@@ -2860,19 +2874,17 @@ static inline void enable_pv_scoring(moves *move_list)
 // score moves
 static inline int score_move(int move, int tt_move)
 {
-    // if PV move scoring is allowed
+    
     if (move == tt_move){
         return 100000;
     }
+    // if PV move scoring is allowed
     if (score_pv)
     {
-        // make sure we are dealing with PV move
+        
         if (pv_table[0][ply] == move)
         {
-            // disable score PV flag
             score_pv = 0;
-            
-            // give PV move the highest score to search it first
             return 20000;
         }
     }
@@ -3093,14 +3105,14 @@ const int full_depth_moves = 4;
 const int reduction_limit = 3;
 
 // negamax alpha beta search
-static inline int negamax(int alpha, int beta, int depth, int is_root)
+static inline int negamax(int alpha, int beta, int depth, int is_root, int is_null)
 {
     
-
     // Dont check for repetition if its in Root of the search.
-    if (!is_root && is_repetition()){
-        return 0;
-    }
+    // If its a repetition, return 0
+    //if (!is_root && is_repetition()){
+    //    return 0;
+    //}
     // every 2047 nodes
     if ((nodes & 2047) == 0){
         // "listen" to the GUI/user input
@@ -3124,10 +3136,10 @@ static inline int negamax(int alpha, int beta, int depth, int is_root)
         //return evaluate();
     }
     
-    
     int pv_node = beta - alpha > 1;
     int oldAlpha = alpha;
     int score;
+    int posEval = evaluate();
 
     // increment nodes count
     nodes++;
@@ -3137,8 +3149,9 @@ static inline int negamax(int alpha, int beta, int depth, int is_root)
                                       side ^ 1);
 
     // increase search depth if the king has been exposed into a check
-    if (in_check)
+    if (in_check){
         depth++;
+    }
 
     // legal moves counter
     int legal_moves = 0;
@@ -3147,6 +3160,28 @@ static inline int negamax(int alpha, int beta, int depth, int is_root)
     // number of moves searched in a move list
     int moves_searched = 0;
     int best = -999999;
+
+    ttEntry tte = probe_entry(hash_key);
+
+    if ((ply != 0) && (hash_key == tte.key) && (tte.depth >= depth))
+    {
+        if (tte.flag == FLAG_EXACT)
+        {
+            return tte.score;
+        }
+        else if (tte.flag == FLAG_BETA)
+        {
+            alpha = MAX(alpha, tte.score);
+        }
+        else if (tte.flag == FLAG_ALPHA)
+        {
+            beta = MIN(beta, tte.score);
+        }
+        if (alpha >= beta)
+        {
+            return tte.score;
+        }
+    }
 
     // create move list instance
     moves move_list[1];
@@ -3160,8 +3195,7 @@ static inline int negamax(int alpha, int beta, int depth, int is_root)
         enable_pv_scoring(move_list);
     }
     // sort moves
-
-    sort_moves(move_list, 0);
+    sort_moves(move_list, tte.move);
     // loop over moves within a movelist
 
     for (int count = 0; count < move_list->count; count++)
@@ -3191,10 +3225,16 @@ static inline int negamax(int alpha, int beta, int depth, int is_root)
 
         // increment legal moves
         legal_moves++;
-        // full depth search
-        // if (moves_searched == 0){
-        // do normal alpha beta search
-        score = -negamax(-beta, -alpha, depth - 1, 0);
+
+        // search with full depth but reduced window
+        if (!pv_node || moves_searched > 0){
+            score = -negamax(-alpha-1, -alpha, depth - 1, 0, is_null);
+        }
+
+        // PVS search.
+        if (pv_node && (moves_searched == 0 || (score > alpha && score < beta))){
+            score = -negamax(-beta, -alpha, depth - 1, 0, is_null);
+        }
         
         // decrement ply
         ply--;
@@ -3250,23 +3290,36 @@ static inline int negamax(int alpha, int beta, int depth, int is_root)
         } // if time is up and we are in root, break.
     }
 
-    // we don't have any legal moves to make in the current postion
     if (legal_moves == 0)
     {
-        // king is in check
         if (in_check)
         {
-            // return mating score (assuming closest distance to mating position)
             return -MATE_VALUE + ply;
         }
-        // king is not in check
+        
         else
         {
-            // return stalemate score
             return 0;
         }
     }
-    // node (position) fails low
+
+    int bound = 0;
+
+    if (best <= oldAlpha)
+    {
+        bound = FLAG_ALPHA;
+    }
+    else if (best >= beta)
+    {
+        bound = FLAG_BETA;
+    }
+    else
+    {
+        bound = FLAG_EXACT;
+    }
+
+    store_entry(hash_key, bound, pv_table[0][0], depth, best);
+    
     return alpha;
 }
 
@@ -3314,7 +3367,7 @@ void search_position(int depth)
 
 
         // find best move within a given position
-        score = negamax(alpha, beta, current_depth, 1);
+        score = negamax(alpha, beta, current_depth, 1, 1);
         
         best_move = pv_table[0][0];
         if (score > -MATE_VALUE && score < -MATE_SCORE){

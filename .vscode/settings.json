@@ -7,6 +7,7 @@
         "windows.h": "c",
         "unistd.h": "c",
         "defs2.h": "c",
-        "pesto.h": "c"
+        "pesto.h": "c",
+        "string.h": "c"
     }
 }

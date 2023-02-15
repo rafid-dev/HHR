@@ -109,10 +109,10 @@
             }
         }*/
 
-// int posEval = evaluate();
-    // ttEntry tte = probe_entry(hash_key);
+    int posEval = evaluate();
+    ttEntry tte = probe_entry(hash_key);
 
-    /*if ((ply != 0) && (hash_key == tte.key) && (tte.depth >= depth))
+    if ((ply != 0) && (hash_key == tte.key) && (tte.depth >= depth))
     {
         if (tte.flag == FLAG_EXACT)
         {
@@ -130,7 +130,7 @@
         {
             return tte.score;
         }
-    }*/
+    }
 
     /*if (!pv_node && !in_check){
         // Reverse Futility Pruning (RFP)

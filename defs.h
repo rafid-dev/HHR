@@ -13,7 +13,7 @@
     # include <sys/time.h>
 #endif
 
-#define _ENGINE_NAME "HHR+History"
+#define _ENGINE_NAME "HHR+TT"
 #define _ENGINE_VERSION "1.0.0"
 #define _ENGINE_AUTHOR "Slender"
 
@@ -630,7 +630,7 @@ typedef struct {
     int count;
 } moves;
 
-const int material_score[12] = {100, 320, 330, 500, 900, 20000, -100, -320, -330, -500, -900, -20000};
+const int material_score[5] = {100, 320, 330, 500, 900};
 
 // pawn positional score
 const int pawn_score[64] = 
