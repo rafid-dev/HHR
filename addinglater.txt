@@ -1,0 +1,227 @@
+/*}
+         late move reduction (LMR)
+        else
+        {
+            // condition to consider LMR
+            if(
+             
+             
+      // int posEval = evaluate();
+    // ttEntry tte = probe_entry(hash_key);
+
+    /*if ((ply != 0) && (hash_key == tte.key) && (tte.depth >= depth))
+    {
+        if (tte.flag == FLAG_EXACT)
+        {
+            return tte.score;
+        }
+        else if (tte.flag == FLAG_BETA)
+        {
+            alpha = MAX(alpha, tte.score);
+        }
+        else if (tte.flag == FLAG_ALPHA)
+        {
+            beta = MIN(beta, tte.score);
+        }
+        if (alpha >= beta)
+        {
+            return tte.score;
+        }
+    }*/
+
+    /*if (!pv_node && !in_check){
+        // Reverse Futility Pruning (RFP)
+        if (depth <= 5 && posEval >= beta && posEval - (depth * 75) >= beta)
+        {
+            return posEval;
+        }
+
+         // (NMP) null move pruning
+        if (depth >= 3 && is_null == 1 && (tte.score >= beta || tte.flag != FLAG_ALPHA))
+        {
+                // preserve board state
+                copy_board();
+
+                // increment ply
+                ply++;
+
+                // increment repetition index & store hash key
+                repetition_index++;
+                repetition_table[repetition_index] = hash_key;
+
+                // hash enpassant if available
+                if (enpassant != no_sq)
+                    hash_key ^= enpassant_keys[enpassant];
+
+                // reset enpassant capture square
+                enpassant = no_sq;
+
+                // switch the side, literally giving opponent an extra move to make
+                side ^= 1;
+
+                // hash the side
+                hash_key ^= side_key;
+
+
+                score = -negamax(-beta, -beta + 1, depth - 2, 0);
+
+                // decrement ply
+                ply--;
+
+                // decrement repetition index
+                repetition_index--;
+
+                // restore board state
+                take_back();
+
+                // reutrn 0 if time is up
+                if (stopped == 1)
+                    return 0;
+
+                // fail-hard beta cutoff
+                if (score >= beta){
+                    // node (position) fails high
+                    return beta;
+                }
+        }
+    }*/   moves_searched >= full_depth_moves &&
+                depth >= reduction_limit &&
+                in_check == 0 &&
+                get_move_capture(move_list->moves[count]) == 0 &&
+                get_move_promoted(move_list->moves[count]) == 0
+              ){
+                // search current move with reduced depth:
+                score = -negamax(-alpha - 1, -alpha, depth - 2, is_null);
+              }
+            // hack to ensure that full-depth search is done
+            else score = alpha + 1;
+
+            // principle variation search PVS
+            if(score > alpha)
+            {
+
+                score = -negamax(-alpha - 1, -alpha, depth-1, is_null);
+
+
+                if((score > alpha) && (score < beta)){
+                    score = -negamax(-beta, -alpha, depth-1, is_null);
+                }
+            }
+        }*/
+
+// int posEval = evaluate();
+    // ttEntry tte = probe_entry(hash_key);
+
+    /*if ((ply != 0) && (hash_key == tte.key) && (tte.depth >= depth))
+    {
+        if (tte.flag == FLAG_EXACT)
+        {
+            return tte.score;
+        }
+        else if (tte.flag == FLAG_BETA)
+        {
+            alpha = MAX(alpha, tte.score);
+        }
+        else if (tte.flag == FLAG_ALPHA)
+        {
+            beta = MIN(beta, tte.score);
+        }
+        if (alpha >= beta)
+        {
+            return tte.score;
+        }
+    }*/
+
+    /*if (!pv_node && !in_check){
+        // Reverse Futility Pruning (RFP)
+        if (depth <= 5 && posEval >= beta && posEval - (depth * 75) >= beta)
+        {
+            return posEval;
+        }
+
+         // (NMP) null move pruning
+        if (depth >= 3 && is_null == 1 && (tte.score >= beta || tte.flag != FLAG_ALPHA))
+        {
+                // preserve board state
+                copy_board();
+
+                // increment ply
+                ply++;
+
+                // increment repetition index & store hash key
+                repetition_index++;
+                repetition_table[repetition_index] = hash_key;
+
+                // hash enpassant if available
+                if (enpassant != no_sq)
+                    hash_key ^= enpassant_keys[enpassant];
+
+                // reset enpassant capture square
+                enpassant = no_sq;
+
+                // switch the side, literally giving opponent an extra move to make
+                side ^= 1;
+
+                // hash the side
+                hash_key ^= side_key;
+
+
+                score = -negamax(-beta, -beta + 1, depth - 2, 0);
+
+                // decrement ply
+                ply--;
+
+                // decrement repetition index
+                repetition_index--;
+
+                // restore board state
+                take_back();
+
+                // reutrn 0 if time is up
+                if (stopped == 1)
+                    return 0;
+
+                // fail-hard beta cutoff
+                if (score >= beta){
+                    // node (position) fails high
+                    return beta;
+                }
+        }
+    }*/
+
+    // store hash entry with the score equal to alpha
+    int bound = 0;
+
+    if (best <= oldAlpha)
+    {
+        bound = FLAG_ALPHA;
+    }
+    else if (best >= beta)
+    {
+        bound = FLAG_BETA;
+    }
+    else
+    {
+        bound = FLAG_EXACT;
+    }
+
+    store_entry(hash_key, bound, pv_table[0][0], depth, best);
+
+
+// on quiet moves
+                 if (get_move_capture(move_list->moves[count]) == 0)
+                 {
+                        // store history moves
+                        history_moves[get_move_piece(move_list->moves[count])][get_move_target(move_list->moves[count])] += depth;
+                 }
+
+                 // on quiet moves
+                 if (get_move_capture(move_list->moves[count]) == 0)
+                 {
+                        // store killer moves
+                        killer_moves[1][ply] = killer_moves[0][ply];
+                        killer_moves[0][ply] = move_list->moves[count];
+                 }
+
+// no betacutoff so we give a penalty in history
+        history_moves[get_move_piece(move_list->moves[count])][get_move_target(move_list->moves[count])] -= depth;

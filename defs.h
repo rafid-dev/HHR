@@ -13,7 +13,7 @@
     # include <sys/time.h>
 #endif
 
-#define _ENGINE_NAME "HHR+Qs"
+#define _ENGINE_NAME "HHR+History"
 #define _ENGINE_VERSION "1.0.0"
 #define _ENGINE_AUTHOR "Slender"
 
